@@ -514,7 +514,7 @@ bool Roads2DGenerator::tryChangeToTrue(int x, int y) {
 
 void Roads2DGenerator::randomInitPoints() {
     int immp = 0;
-    Roads2DGeneratorSafeLoop safeLoop(1000);
+    Roads2DGeneratorSafeLoop safeLoop(10000);
     while (immp < m_nMaxMainPoints) {
         safeLoop.doIncrement();
         int x = (m_random.getNextRandom() % (m_nWidthPixels - 2)) + 1;
@@ -524,7 +524,7 @@ void Roads2DGenerator::randomInitPoints() {
         }
         if (safeLoop.isOverMax()) {
             printMap();
-            std::cout << "Roads2DGenerator::moveDiagonalTailsLoop(), nSafeWhile = " << safeLoop.getLoopNumber() << std::endl;
+            std::cout << "Roads2DGenerator::randomInitPoints(), nSafeWhile = " << safeLoop.getLoopNumber() << std::endl;
             exit(1);
         }
     }
