@@ -28,7 +28,14 @@ Example of generated structs (30x30 points):
 int width = 30;
 int height = 30;
 Roads2DGenerator road2gen(width, height);
-road2gen.generate(0.7);
+
+
+// You can use the following parameter (nSeedRandom) to reproduce the results.
+// If parameters will be same then on any machine will be same result.
+unsigned int nSeedRandom = std::time(0);
+// unsigned int nSeedRandom = 1686154273;
+
+road2gen.generate(0.7, nSeedRandom);
 
 // use a table with true/false
 std::vector<std::vector<bool>> vPixelMap = road2gen.exportToPixelMap();
@@ -90,3 +97,5 @@ SDL 2D game
 Description: https://itch.io/jam/sibgamejam-may-2025/rate/3530033
 
 GamePlay: https://youtu.be/pl22Vp3yUuY?si=YqOClG28xD4-bAZ6
+
+Unigine 3D game

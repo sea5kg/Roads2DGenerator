@@ -17,8 +17,15 @@ int main(int argc, char *argv[])
     int width = 30;
     int height = 30;
     Roads2DGenerator road2gen(width, height);
-    road2gen.generate(0.7);
+
+    // You can use the following parameter (nSeedRandom) to reproduce the results.
+    // If parameters will be same then on any machine will be same result.
+    unsigned int nSeedRandom = std::time(0);
+    // unsigned int nSeedRandom = 1686154273;
+
+    road2gen.generate(0.7, nSeedRandom);
     road2gen.printMap();
+    road2gen.getSeedRandom();
 
     // std::cout << "1" << std::endl;
     Roads2DGeneratorUnigineSplineGraph unigineSpl(road2gen.exportToGraph());

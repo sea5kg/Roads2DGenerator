@@ -106,7 +106,9 @@ class Roads2DGenerator {
     public:
         Roads2DGenerator(int nWidthPixels, int nHeightPixels);
         void generate(float nDensity);
+        void generate(float nDensity, unsigned int nSeedForRandom);
         void printMap();
+        unsigned int getSeedRandom();
         std::vector<std::vector<std::string>> exportToTable();
         std::vector<std::vector<bool>> exportToPixelMap();
         Roads2DGeneratorGraph exportToGraph();

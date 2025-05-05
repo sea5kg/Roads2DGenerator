@@ -264,6 +264,10 @@ Roads2DGenerator::Roads2DGenerator(int nWidthPixels, int nHeightPixels) {
 }
 
 void Roads2DGenerator::generate(float nDensity) {
+    generate(nDensity, std::time(0));
+}
+
+void Roads2DGenerator::generate(float nDensity, unsigned int nSeedForRandom) {
     // https://en.wikipedia.org/wiki/Wave_function_collapse
     if (nDensity > 1.0) {
         nDensity = 1.0;
@@ -273,9 +277,7 @@ void Roads2DGenerator::generate(float nDensity) {
     }
     int pixels = m_nWidthPixels*m_nHeightPixels;
     m_nMaxMainPoints = nDensity * (pixels / 2);
-    m_random.setInitSeed(std::time(0));
-    // m_random.setInitSeed(1686154273);
-
+    m_random.setInitSeed(nSeedForRandom);
 
     // std::cout << "m_nWidthPixels = " << m_nWidthPixels << "; m_nHeightPixels = " << m_nHeightPixels << std::endl;
 
@@ -360,6 +362,10 @@ void Roads2DGenerator::printMap() {
         }
         std::cout << sLine << std::endl;
     }
+}
+
+unsigned int Roads2DGenerator::getSeedRandom() {
+    return m_random.getInitSeed();
 }
 
 std::vector<std::vector<std::string>> Roads2DGenerator::exportToTable() {
