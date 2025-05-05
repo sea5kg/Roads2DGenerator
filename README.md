@@ -99,3 +99,12 @@ Description: https://itch.io/jam/sibgamejam-may-2025/rate/3530033
 GamePlay: https://youtu.be/pl22Vp3yUuY?si=YqOClG28xD4-bAZ6
 
 Unigine 3D game
+
+
+## Projects with similar algorithms
+
+### Tank_Game
+
+https://github.com/nickolasddiaz/Tank_Game/
+
+Gneratior: [core/src/main/java/io/github/nickolasddiaz/utils/TerrainGenerator.java](https://github.com/nickolasddiaz/Tank_Game/blob/master/core/src/main/java/io/github/nickolasddiaz/utils/TerrainGenerator.java)
