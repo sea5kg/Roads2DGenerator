@@ -76,3 +76,17 @@ for (int x = 0; x < width; x++) {
 }
 
 ```
+
+## Used in games
+
+### yourCityIsInvadedByAliens
+
+Repo: https://github.com/sea5kg/yourCityIsInvadedByAliens
+
+SDL 2D game
+
+### The Guiding Thread
+
+Description: https://itch.io/jam/sibgamejam-may-2025/rate/3530033
+
+GamePlay: https://youtu.be/pl22Vp3yUuY?si=YqOClG28xD4-bAZ6
