@@ -1,12 +1,12 @@
 # Roads2DGenerator
 
-Algorithm for map generation of roads in 2D
+2D map of roads generation algorithm
 
 (collapse wave function???)
 
 Forked and improved from https://github.com/sea-kg/roadmapgen2d
 
-Example of generated structs (30x30 points):
+Example of generated structures (30x30 points):
 
 
 
@@ -18,7 +18,7 @@ Example of generated structs (30x30 points):
 
 ## Usage
 
-1. Copy `src/Roads2DGenerator.*` to your project
+1. Copy `src/Roads2DGenerator.*` into your project
 
 ```cpp
 #include "Roads2DGenerator.h"
@@ -31,7 +31,7 @@ Roads2DGenerator road2gen(width, height);
 
 
 // You can use the following parameter (nSeedRandom) to reproduce the results.
-// If parameters will be same then on any machine will be same result.
+// If the parameters are the same, then the result will be the same on any machine.
 unsigned int nSeedRandom = std::time(0);
 // unsigned int nSeedRandom = 1686154273;
 
@@ -96,7 +96,7 @@ SDL 2D game
 
 Description: https://itch.io/jam/sibgamejam-may-2025/rate/3530033
 
-GamePlay: https://youtu.be/pl22Vp3yUuY?si=YqOClG28xD4-bAZ6
+Gameplay: https://youtu.be/pl22Vp3yUuY?si=YqOClG28xD4-bAZ6
 
 Unigine 3D game
 
@@ -107,4 +107,4 @@ Unigine 3D game
 
 https://github.com/nickolasddiaz/Tank_Game/
 
-Gneratior: [core/src/main/java/io/github/nickolasddiaz/utils/TerrainGenerator.java](https://github.com/nickolasddiaz/Tank_Game/blob/master/core/src/main/java/io/github/nickolasddiaz/utils/TerrainGenerator.java)
+Generator: [core/src/main/java/io/github/nickolasddiaz/utils/TerrainGenerator.java](https://github.com/nickolasddiaz/Tank_Game/blob/master/core/src/main/java/io/github/nickolasddiaz/utils/TerrainGenerator.java)

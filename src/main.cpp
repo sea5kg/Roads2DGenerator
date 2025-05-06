@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     Roads2DGenerator road2gen(width, height);
 
     // You can use the following parameter (nSeedRandom) to reproduce the results.
-    // If parameters will be same then on any machine will be same result.
+    // If the parameters are the same, then the result will be the same on any machine.
     unsigned int nSeedRandom = std::time(0);
     // unsigned int nSeedRandom = 1686154273;
 
