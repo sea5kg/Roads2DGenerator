@@ -27,11 +27,14 @@ int main(int argc, char *argv[])
     road2gen.printMap();
     road2gen.getSeedRandom();
 
-    // std::cout << "1" << std::endl;
-    Roads2DGeneratorUnigineSplineGraph unigineSpl(road2gen.exportToGraph());
-    unigineSpl.modifyScale(10);
-    unigineSpl.modifyRandom(10.0, 10.0, 0.5);
+    // json examples
+    road2gen.exportLikeJsonPixelMapToFile("examples/road2dgen_example_pixelmap.json");
 
-    unigineSpl.exportToSPLFile("test.spl");
+    // spline graph for unigine example
+    // Roads2DGeneratorUnigineSplineGraph unigineSpl(road2gen.exportLikeGraph());
+    // unigineSpl.modifyScale(10);
+    // unigineSpl.modifyRandom(10.0, 10.0, 0.5);
+    // unigineSpl.exportToSPLFile("examples/road2dgen_example_spline_graph_for_unigine.spl");
+
     return 0;
 }

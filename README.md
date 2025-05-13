@@ -82,6 +82,10 @@ for (int x = 0; x < width; x++) {
     }
 }
 
+
+// json examples
+road2gen.exportLikeJsonPixelMapToFile("road2dgen_example_pixelmap.json");
+
 ```
 
 ## Used in games

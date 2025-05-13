@@ -109,9 +109,11 @@ class Roads2DGenerator {
         void generate(float nDensity, unsigned int nSeedForRandom);
         void printMap();
         unsigned int getSeedRandom();
-        std::vector<std::vector<std::string>> exportToTable();
-        std::vector<std::vector<bool>> exportToPixelMap();
-        Roads2DGeneratorGraph exportToGraph();
+        std::vector<std::vector<std::string>> exportLikeTable();
+        std::vector<std::vector<bool>> exportLikePixelMap();
+        Roads2DGeneratorGraph exportLikeGraph();
+        std::string exportLikeJsonPixelMap();
+        bool exportLikeJsonPixelMapToFile(const std::string &sFilepath);
 
     private:
         void resetMap();

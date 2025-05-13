@@ -33,6 +33,6 @@
 
 # Roads2DGenerator
 /tmp
+/build
 .vscode
-*.spl
 Roads2DGenerator

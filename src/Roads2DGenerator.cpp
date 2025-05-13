@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include "Roads2DGenerator.h"
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <ctime>
 
@@ -368,7 +369,7 @@ unsigned int Roads2DGenerator::getSeedRandom() {
     return m_random.getInitSeed();
 }
 
-std::vector<std::vector<std::string>> Roads2DGenerator::exportToTable() {
+std::vector<std::vector<std::string>> Roads2DGenerator::exportLikeTable() {
     std::vector<std::vector<std::string>> vResult;
     for (int y = 0; y < m_nHeightPixels; y++) {
         std::vector<std::string> vLine;
@@ -384,11 +385,11 @@ std::vector<std::vector<std::string>> Roads2DGenerator::exportToTable() {
     return vResult;
 }
 
-std::vector<std::vector<bool>> Roads2DGenerator::exportToPixelMap() {
+std::vector<std::vector<bool>> Roads2DGenerator::exportLikePixelMap() {
     return m_vPixelMap;
 }
 
-Roads2DGeneratorGraph Roads2DGenerator::exportToGraph() {
+Roads2DGeneratorGraph Roads2DGenerator::exportLikeGraph() {
     Roads2DGeneratorGraph graph;
     for (int x = 0; x < m_nWidthPixels - 1; x++) {
         for (int y = 0; y < m_nHeightPixels - 1; y++) {
@@ -406,6 +407,41 @@ Roads2DGeneratorGraph Roads2DGenerator::exportToGraph() {
         }
     }
     return graph;
+}
+
+std::string Roads2DGenerator::exportLikeJsonPixelMap() {
+    std::string sRet = "{\n  \"roads2dgen_pixelmap\": [\n";
+    for (int y = 0; y < m_nHeightPixels; y++) {
+        sRet += "    [";
+        for (int x = 0; x < m_nWidthPixels; x++) {
+            if (m_vPixelMap[x][y]) {
+                sRet += "1";
+            } else {
+                sRet += "0";
+            }
+            if (x < m_nWidthPixels-1) {
+                sRet += ", ";
+            }
+        }
+        if (y < m_nHeightPixels-1) {
+            sRet += "],\n";
+        } else {
+            sRet += "]\n";
+        }
+    }
+    sRet += "  ]\n}\n";
+    return sRet;
+}
+
+bool Roads2DGenerator::exportLikeJsonPixelMapToFile(const std::string &sFilepath) {
+    std::ofstream fw(sFilepath, std::ofstream::out);
+    if (!fw.is_open()) {
+        std::cerr << "Could not oprn file " << sFilepath << std::endl;
+        return false;
+    }
+    fw << exportLikeJsonPixelMap();
+    fw.close();
+    return true;
 }
 
 void Roads2DGenerator::resetMap() {
