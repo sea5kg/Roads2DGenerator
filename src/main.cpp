@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     Roads2DGenerator road2gen;
     road2gen.getConfig()
         .setWidth(50)
-        .setHeight(50)
+        .setHeight(25)
         .setDensity(0.9)
     ;
 
@@ -26,13 +26,18 @@ int main(int argc, char *argv[])
     road2gen.getConfig().setSeedInitRandom(std::time(0));
     // road2gen.getConfig().setSeedInitRandom(1686154273);
 
+    // You can exclude some area
+    road2gen.getConfig().setPresetExcludes(12, 10, 18, 15);
+
     if (!road2gen.generate()) {
         std::cerr
-            << "Could not generate. Try again or change input params and try again."
-            << "Error: " << road2gen.getErrorMessage()
+            << "FAILED. Could not generate. Try again or change input params and try again." << std::endl
+            << "Init Seed: " << road2gen.getConfig().getSeedInitRandom() << std::endl
+            << "Error Message: " << road2gen.getErrorMessage() << std::endl
             << std::endl;
         return 1;
     }
+    // std::cout << "Init Seed: " << road2gen.getConfig().getSeedInitRandom() << std::endl;
     road2gen.printMap();
 
     // json examples

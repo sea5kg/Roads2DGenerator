@@ -27,8 +27,9 @@ SOFTWARE.
 #ifndef __ROADS_2D_GENERATOR_H__
 #define __ROADS_2D_GENERATOR_H__
 
-#include <vector>
 #include <string>
+#include <vector>
+#include <map>
 
 class Roads2DGeneratorSafeLoop {
     public:
@@ -115,14 +116,21 @@ class Roads2DGeneratorConfig {
         int getMaxInitPoints() const;
         Roads2DGeneratorConfig &setSeedInitRandom(int val);
         int getSeedInitRandom() const;
-        Roads2DGeneratorConfig &setMaxAllowInitPointsTries(int val);
+        Roads2DGeneratorConfig &setMaxAllowInitPointsTries(int val, bool bSetByUser = true);
+        bool isSetByUserMaxAllowInitPointsTries() const;
         int getMaxAllowInitPointsTries() const;
-        Roads2DGeneratorConfig &setMaxAllowMoveDiagonalTailsTries(int val);
+        Roads2DGeneratorConfig &setMaxAllowMoveDiagonalTailsTries(int val, bool bSetByUser = true);
+        bool isSetAsUserMaxAllowMoveDiagonalTailsTries() const;
         int getMaxAllowMoveDiagonalTailsTries() const;
-        Roads2DGeneratorConfig &setMaxAllowConnectUnunionRoadsTries(int val);
+        Roads2DGeneratorConfig &setMaxAllowConnectUnunionRoadsTries(int val, bool bSetByUser = true);
+        bool isSetByUserAllowConnectUnunionRoadsTries() const;
         int getMaxAllowConnectUnunionRoadsTries() const;
-        Roads2DGeneratorConfig &setMaxAllowRemoveAllShortCiclesLoopTries(int val);
+        Roads2DGeneratorConfig &setMaxAllowRemoveAllShortCiclesLoopTries(int val, bool bSetByUser = true);
+        bool isSetAsUserMaxAllowRemoveAllShortCiclesLoopTries() const;
         int getMaxAllowRemoveAllShortCiclesLoopTries() const;
+
+        Roads2DGeneratorConfig &setPresetExcludes(int x_start, int y_start, int x_end, int y_end);
+        const std::map<std::pair<int,int>, bool> &getPresets();
 
     private:
         int m_nWidth;
@@ -130,9 +138,14 @@ class Roads2DGeneratorConfig {
         float m_nDensity;
         int m_nSeedInitRandom;
         int m_nMaxAllowInitPointsTries;
+        bool m_bSetByUserMaxAllowInitPointsTries;
         int m_nMaxAllowMoveDiagonalTailsTries;
+        bool m_bSetByUserMaxAllowMoveDiagonalTailsTries;
         int m_nMaxAllowConnectUnunionRoadsTries;
+        bool m_bSetByUserMaxAllowConnectUnunionRoadsTries;
         int m_nMaxAllowRemoveAllShortCiclesLoopTries;
+        bool m_bSetByUserMaxAllowRemoveAllShortCiclesLoopTries;
+        std::map<std::pair<int,int>, bool> m_presets;
 };
 
 class Roads2DGenerator {
@@ -151,12 +164,15 @@ class Roads2DGenerator {
 
     private:
         void resetMap();
+        void initPresets();
         bool isBorder(int x, int y);
+        bool isPreset(int x, int y);
         bool isAllowed(int x, int y);
         bool isRame(int x, int y);
         bool isSinglePoint(int x, int y);
         bool isEqual(std::vector<Roads2DGeneratorPoint> vLeft, std::vector<Roads2DGeneratorPoint> vRight);
         bool tryChangeToTrue(int x, int y);
+        bool tryChangeToFalse(int x, int y);
         bool randomInitPoints();
         int moveDiagonalTails();
         bool moveDiagonalTailsLoop();
@@ -186,6 +202,7 @@ class Roads2DGenerator {
         Roads2DGeneratorPseudoRandom m_random;
         Roads2DGeneratorConfig m_config;
         std::string m_sErrorMessage;
+        std::vector<int> m_cachePresets;
 };
 
 

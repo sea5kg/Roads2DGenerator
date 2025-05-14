@@ -38,10 +38,13 @@ road2gen.getConfig()
 road2gen.getConfig().setSeedInitRandom(std::time(0));
 // road2gen.getConfig().setSeedInitRandom(1686154273);
 
+road2gen.getConfig().setPresetExcludes(12, 10, 18, 15);
+
 if (!road2gen.generate()) {
     std::cerr
-        << "Could not generate. Try again or change input params and try again."
-        << "Error: " << road2gen.getErrorMessage()
+        << "FAILED. Could not generate. Try again or change input params and try again." << std::endl
+        << "Init Seed: " << road2gen.getConfig().getSeedInitRandom() << std::endl
+        << "Error Message: " << road2gen.getErrorMessage() << std::endl
         << std::endl;
     return 1;
 }
