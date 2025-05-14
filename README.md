@@ -24,18 +24,27 @@ Example of generated structures (30x30 points):
 #include "Roads2DGenerator.h"
 
 ...
+Roads2DGenerator road2gen;
 
-int width = 30;
-int height = 30;
-Roads2DGenerator road2gen(width, height);
-
+// configure
+road2gen.getConfig()
+    .setWidth(30)
+    .setHeight(30)
+    .setDensity(0.7)
+;
 
 // You can use the following parameter (nSeedRandom) to reproduce the results.
 // If the parameters are the same, then the result will be the same on any machine.
-unsigned int nSeedRandom = std::time(0);
-// unsigned int nSeedRandom = 1686154273;
+road2gen.getConfig().setSeedInitRandom(std::time(0));
+// road2gen.getConfig().setSeedInitRandom(1686154273);
 
-road2gen.generate(0.7, nSeedRandom);
+if (!road2gen.generate()) {
+    std::cerr
+        << "Could not generate. Try again or change input params and try again."
+        << "Error: " << road2gen.getErrorMessage()
+        << std::endl;
+    return 1;
+}
 
 // use a table with true/false
 std::vector<std::vector<bool>> vPixelMap = road2gen.exportToPixelMap();

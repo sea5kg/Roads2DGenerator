@@ -102,13 +102,47 @@ class Roads2DGeneratorConnectedComponents {
         std::vector<Roads2DGeneratorConnectedComponent> m_vComponents;
 };
 
+class Roads2DGeneratorConfig {
+    public:
+        Roads2DGeneratorConfig();
+        Roads2DGeneratorConfig &resetConfig();
+        Roads2DGeneratorConfig &setWidth(int val);
+        int getWidth() const;
+        Roads2DGeneratorConfig &setHeight(int val);
+        int getHeight() const;
+        Roads2DGeneratorConfig &setDensity(float nDensity);
+        float getDensity() const;
+        int getMaxInitPoints() const;
+        Roads2DGeneratorConfig &setSeedInitRandom(int val);
+        int getSeedInitRandom() const;
+        Roads2DGeneratorConfig &setMaxAllowInitPointsTries(int val);
+        int getMaxAllowInitPointsTries() const;
+        Roads2DGeneratorConfig &setMaxAllowMoveDiagonalTailsTries(int val);
+        int getMaxAllowMoveDiagonalTailsTries() const;
+        Roads2DGeneratorConfig &setMaxAllowConnectUnunionRoadsTries(int val);
+        int getMaxAllowConnectUnunionRoadsTries() const;
+        Roads2DGeneratorConfig &setMaxAllowRemoveAllShortCiclesLoopTries(int val);
+        int getMaxAllowRemoveAllShortCiclesLoopTries() const;
+
+    private:
+        int m_nWidth;
+        int m_nHeight;
+        float m_nDensity;
+        int m_nSeedInitRandom;
+        int m_nMaxAllowInitPointsTries;
+        int m_nMaxAllowMoveDiagonalTailsTries;
+        int m_nMaxAllowConnectUnunionRoadsTries;
+        int m_nMaxAllowRemoveAllShortCiclesLoopTries;
+};
+
 class Roads2DGenerator {
     public:
-        Roads2DGenerator(int nWidthPixels, int nHeightPixels);
-        void generate(float nDensity);
-        void generate(float nDensity, unsigned int nSeedForRandom);
+        Roads2DGenerator();
+        const std::string &getErrorMessage();
+        Roads2DGeneratorConfig &getConfig();
+        bool generate(const Roads2DGeneratorConfig &);
+        bool generate();
         void printMap();
-        unsigned int getSeedRandom();
         std::vector<std::vector<std::string>> exportLikeTable();
         std::vector<std::vector<bool>> exportLikePixelMap();
         Roads2DGeneratorGraph exportLikeGraph();
@@ -123,9 +157,9 @@ class Roads2DGenerator {
         bool isSinglePoint(int x, int y);
         bool isEqual(std::vector<Roads2DGeneratorPoint> vLeft, std::vector<Roads2DGeneratorPoint> vRight);
         bool tryChangeToTrue(int x, int y);
-        void randomInitPoints();
+        bool randomInitPoints();
         int moveDiagonalTails();
-        void moveDiagonalTailsLoop();
+        bool moveDiagonalTailsLoop();
         bool checkAndRandomMove(int x, int y);
         int getAroundCount(int x, int y);
         std::vector<Roads2DGeneratorPoint> findSinglePoints();
@@ -137,22 +171,21 @@ class Roads2DGenerator {
         bool canConnectClosePoints(int x, int y);
         void connectAllClosePoints();
         int removeAllShortCicles();
-        void removeAllShortCiclesLoop();
+        bool removeAllShortCiclesLoop();
         bool isDeadlockPoint(int x, int y);
         std::vector<Roads2DGeneratorPoint> findDeadlockPoints();
         Roads2DGeneratorPoint findShortPointFrom(Roads2DGeneratorPoint p0, std::vector<Roads2DGeneratorPoint> points);
         void tryConnectDeadlocksLoop();
         void removeDeadlocksLoop();
-        void connectUnunionRoads();
+        bool connectUnunionRoads();
         std::string getRoadPart(int x, int y);
         std::vector<Roads2DGeneratorConnectedComponent> findConnectedComponents();
 
-        int m_nWidthPixels;
-        int m_nHeightPixels;
-        int m_nMaxMainPoints;
         std::vector<std::vector<bool>> m_vPixelMap;
 
         Roads2DGeneratorPseudoRandom m_random;
+        Roads2DGeneratorConfig m_config;
+        std::string m_sErrorMessage;
 };
 
 

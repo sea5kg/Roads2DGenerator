@@ -257,39 +257,155 @@ void Roads2DGeneratorConnectedComponents::mergeComponents() {
 }
 
 // ---------------------------------------------------------------------
-// Roads2DGenerator
+// Roads2DGeneratorConfig
 
-Roads2DGenerator::Roads2DGenerator(int nWidthPixels, int nHeightPixels) {
-    m_nWidthPixels = nWidthPixels;
-    m_nHeightPixels = nHeightPixels;
+Roads2DGeneratorConfig::Roads2DGeneratorConfig() {
+    this->resetConfig();
 }
 
-void Roads2DGenerator::generate(float nDensity) {
-    generate(nDensity, std::time(0));
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::resetConfig() {
+    m_nWidth = 30;
+    m_nHeight = 30;
+    m_nDensity = 0.7;
+    m_nSeedInitRandom = std::time(0);
+    m_nMaxAllowInitPointsTries = 10000; // default
+    m_nMaxAllowMoveDiagonalTailsTries = 1000; // default
+    m_nMaxAllowConnectUnunionRoadsTries = 100; // default
+    m_nMaxAllowRemoveAllShortCiclesLoopTries = 1000; // default;
+    return *this;
 }
 
-void Roads2DGenerator::generate(float nDensity, unsigned int nSeedForRandom) {
-    // https://en.wikipedia.org/wiki/Wave_function_collapse
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setWidth(int val) {
+    m_nWidth = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getWidth() const {
+    return m_nWidth;
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setHeight(int val) {
+    m_nHeight = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getHeight() const {
+    return m_nHeight;
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setDensity(float nDensity) {
     if (nDensity > 1.0) {
         nDensity = 1.0;
     }
     if (nDensity < 0.0) {
         nDensity = 0.0;
     }
-    int pixels = m_nWidthPixels*m_nHeightPixels;
-    m_nMaxMainPoints = nDensity * (pixels / 2);
-    m_random.setInitSeed(nSeedForRandom);
+    m_nDensity = nDensity;
+    return *this;
+}
 
-    // std::cout << "m_nWidthPixels = " << m_nWidthPixels << "; m_nHeightPixels = " << m_nHeightPixels << std::endl;
+float Roads2DGeneratorConfig::getDensity() const {
+    return m_nDensity;
+}
+
+int Roads2DGeneratorConfig::getMaxInitPoints() const {
+    return m_nDensity * (m_nWidth * m_nHeight / 2);
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setSeedInitRandom(int val) {
+    m_nSeedInitRandom = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getSeedInitRandom() const {
+    return m_nSeedInitRandom;
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setMaxAllowInitPointsTries(int val) {
+    m_nMaxAllowInitPointsTries = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getMaxAllowInitPointsTries() const {
+    return m_nMaxAllowInitPointsTries;
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setMaxAllowMoveDiagonalTailsTries(int val) {
+    m_nMaxAllowMoveDiagonalTailsTries = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getMaxAllowMoveDiagonalTailsTries() const {
+    return m_nMaxAllowMoveDiagonalTailsTries;
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setMaxAllowConnectUnunionRoadsTries(int val) {
+    m_nMaxAllowConnectUnunionRoadsTries = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getMaxAllowConnectUnunionRoadsTries() const {
+    return m_nMaxAllowConnectUnunionRoadsTries;
+}
+
+Roads2DGeneratorConfig &Roads2DGeneratorConfig::setMaxAllowRemoveAllShortCiclesLoopTries(int val) {
+    m_nMaxAllowRemoveAllShortCiclesLoopTries = val;
+    return *this;
+}
+
+int Roads2DGeneratorConfig::getMaxAllowRemoveAllShortCiclesLoopTries() const {
+    return m_nMaxAllowRemoveAllShortCiclesLoopTries;
+}
+
+// ---------------------------------------------------------------------
+// Roads2DGenerator
+
+Roads2DGenerator::Roads2DGenerator() {
+    // nothing
+}
+
+const std::string &Roads2DGenerator::getErrorMessage() {
+    return m_sErrorMessage;
+}
+
+Roads2DGeneratorConfig &Roads2DGenerator::getConfig() {
+    return m_config;
+}
+
+bool Roads2DGenerator::generate(const Roads2DGeneratorConfig &config) {
+    m_config = config;
+    return generate();
+}
+
+bool Roads2DGenerator::generate() {
+    // https://en.wikipedia.org/wiki/Wave_function_collapse
+
+    // TODO: must be calculated by width-heights-density
+    m_config.setMaxAllowInitPointsTries(10000);
+    m_config.setMaxAllowMoveDiagonalTailsTries(1000);
+    m_config.setMaxAllowConnectUnunionRoadsTries(100);
+    m_config.setMaxAllowRemoveAllShortCiclesLoopTries(1000);
+
+    m_sErrorMessage = "";
+
+    m_random.setInitSeed(m_config.getSeedInitRandom());
+
+    // std::cout << "m_config.getWidth() = " << m_config.getWidth() << "; m_config.getHeight() = " << m_config.getHeight() << std::endl;
 
     resetMap();
-    randomInitPoints();
+
+    if (!randomInitPoints()) {
+        return false;
+    }
     // printMap();
 
-    moveDiagonalTailsLoop();
+    if (!moveDiagonalTailsLoop()) {
+        return false;
+    }
     // printMap();
 
     bool bAgain = true;
+    // TODO safecicle
     while (bAgain) {
         std::vector<Roads2DGeneratorPoint> vPoints = findSinglePoints();
         if (vPoints.size() <= 1) {
@@ -299,7 +415,9 @@ void Roads2DGenerator::generate(float nDensity, unsigned int nSeedForRandom) {
         Roads2DGeneratorPoint p0 = vPoints[m_random.getNextRandom() % vPoints.size()];
         Roads2DGeneratorPoint p1 = vPoints[m_random.getNextRandom() % vPoints.size()];
         connectPoints(p0, p1);
-        moveDiagonalTailsLoop();
+        if (!moveDiagonalTailsLoop()) {
+            return false;
+        }
     }
 
     // remove last single point
@@ -309,9 +427,13 @@ void Roads2DGenerator::generate(float nDensity, unsigned int nSeedForRandom) {
 
     // printMap();
     // removeAllShortCicles
-    removeAllShortCiclesLoop();
+    if (!removeAllShortCiclesLoop()) {
+        return false;
+    }
     removeRames();
-    moveDiagonalTailsLoop();
+    if (!moveDiagonalTailsLoop()) {
+        return false;
+    }
 
     // printMap();
 
@@ -320,12 +442,16 @@ void Roads2DGenerator::generate(float nDensity, unsigned int nSeedForRandom) {
 
     removeAllShortCiclesLoop();
     removeRames();
-    moveDiagonalTailsLoop();
+    if (!moveDiagonalTailsLoop()) {
+        return false;
+    }
     removeDeadlocksLoop();
     removeSinglePoints();
     removeRames();
 
-    connectUnunionRoads();
+    if (!connectUnunionRoads()) {
+        return false;
+    }
     removeDeadlocksLoop();
     removeSinglePoints();
     removeRames();
@@ -337,13 +463,14 @@ void Roads2DGenerator::generate(float nDensity, unsigned int nSeedForRandom) {
 
     // write_map_to_image()
     // printMap();
+    return true;
 }
 
 void Roads2DGenerator::printMap() {
     // std::cout << "map: " << std::endl;
-    for (int y = 0; y < m_nHeightPixels; y++) {
+    for (int y = 0; y < m_config.getHeight(); y++) {
         std::string sLine = "";
-        for (int x = 0; x < m_nWidthPixels; x++) {
+        for (int x = 0; x < m_config.getWidth(); x++) {
             #ifdef _WIN32
                 if (m_vPixelMap[x][y]) {
                     sLine += char(219);
@@ -365,15 +492,11 @@ void Roads2DGenerator::printMap() {
     }
 }
 
-unsigned int Roads2DGenerator::getSeedRandom() {
-    return m_random.getInitSeed();
-}
-
 std::vector<std::vector<std::string>> Roads2DGenerator::exportLikeTable() {
     std::vector<std::vector<std::string>> vResult;
-    for (int y = 0; y < m_nHeightPixels; y++) {
+    for (int y = 0; y < m_config.getHeight(); y++) {
         std::vector<std::string> vLine;
-        for (int x = 0; x < m_nWidthPixels; x++) {
+        for (int x = 0; x < m_config.getWidth(); x++) {
             if (m_vPixelMap[x][y]) {
                 vLine.push_back(getRoadPart(x,y));
             } else {
@@ -391,8 +514,8 @@ std::vector<std::vector<bool>> Roads2DGenerator::exportLikePixelMap() {
 
 Roads2DGeneratorGraph Roads2DGenerator::exportLikeGraph() {
     Roads2DGeneratorGraph graph;
-    for (int x = 0; x < m_nWidthPixels - 1; x++) {
-        for (int y = 0; y < m_nHeightPixels - 1; y++) {
+    for (int x = 0; x < m_config.getWidth() - 1; x++) {
+        for (int y = 0; y < m_config.getHeight() - 1; y++) {
             if (m_vPixelMap[x][y]) {
                 int indexXY = graph.findOrAddPointGetIndex(Roads2DGeneratorPoint(x,y));
                 if (m_vPixelMap[x+1][y]) {
@@ -411,19 +534,19 @@ Roads2DGeneratorGraph Roads2DGenerator::exportLikeGraph() {
 
 std::string Roads2DGenerator::exportLikeJsonPixelMap() {
     std::string sRet = "{\n  \"roads2dgen_pixelmap\": [\n";
-    for (int y = 0; y < m_nHeightPixels; y++) {
+    for (int y = 0; y < m_config.getHeight(); y++) {
         sRet += "    [";
-        for (int x = 0; x < m_nWidthPixels; x++) {
+        for (int x = 0; x < m_config.getWidth(); x++) {
             if (m_vPixelMap[x][y]) {
                 sRet += "1";
             } else {
                 sRet += "0";
             }
-            if (x < m_nWidthPixels-1) {
+            if (x < m_config.getWidth()-1) {
                 sRet += ", ";
             }
         }
-        if (y < m_nHeightPixels-1) {
+        if (y < m_config.getHeight()-1) {
             sRet += "],\n";
         } else {
             sRet += "]\n";
@@ -436,7 +559,8 @@ std::string Roads2DGenerator::exportLikeJsonPixelMap() {
 bool Roads2DGenerator::exportLikeJsonPixelMapToFile(const std::string &sFilepath) {
     std::ofstream fw(sFilepath, std::ofstream::out);
     if (!fw.is_open()) {
-        std::cerr << "Could not oprn file " << sFilepath << std::endl;
+        m_sErrorMessage = "Could not open file " + sFilepath;
+        std::cerr << m_sErrorMessage << std::endl;
         return false;
     }
     fw << exportLikeJsonPixelMap();
@@ -446,9 +570,9 @@ bool Roads2DGenerator::exportLikeJsonPixelMapToFile(const std::string &sFilepath
 
 void Roads2DGenerator::resetMap() {
     m_vPixelMap.clear();
-    for (int x = 0; x < m_nWidthPixels; x++) {
+    for (int x = 0; x < m_config.getWidth(); x++) {
         std::vector<bool> line;
-        for (int y = 0; y < m_nHeightPixels; y++) {
+        for (int y = 0; y < m_config.getHeight(); y++) {
             line.push_back(false);
         }
         m_vPixelMap.push_back(line);
@@ -456,15 +580,14 @@ void Roads2DGenerator::resetMap() {
 }
 
 bool Roads2DGenerator::isBorder(int x, int y) {
-    if (x == 0 || x == m_nWidthPixels - 1) {
+    if (x == 0 || x == m_config.getWidth() - 1) {
         return true;
     }
-    if (y == 0 || y == m_nHeightPixels - 1) {
+    if (y == 0 || y == m_config.getHeight() - 1) {
         return true;
     }
     return false;
 }
-
 
 bool Roads2DGenerator::isRame(int x, int y) {
     if (isBorder(x, y)) {
@@ -554,22 +677,25 @@ bool Roads2DGenerator::tryChangeToTrue(int x, int y) {
     return true;
 }
 
-void Roads2DGenerator::randomInitPoints() {
+bool Roads2DGenerator::randomInitPoints() {
     int immp = 0;
-    Roads2DGeneratorSafeLoop safeLoop(10000);
-    while (immp < m_nMaxMainPoints) {
+    Roads2DGeneratorSafeLoop safeLoop(m_config.getMaxAllowInitPointsTries());
+    int nMaxMainPoints = m_config.getMaxInitPoints();
+    while (immp < nMaxMainPoints) {
         safeLoop.doIncrement();
-        int x = (m_random.getNextRandom() % (m_nWidthPixels - 2)) + 1;
-        int y = (m_random.getNextRandom() % (m_nHeightPixels - 2)) + 1;
+        int x = (m_random.getNextRandom() % (m_config.getWidth() - 2)) + 1;
+        int y = (m_random.getNextRandom() % (m_config.getHeight() - 2)) + 1;
         if (tryChangeToTrue(x,y)) {
             immp += 1;
         }
         if (safeLoop.isOverMax()) {
             printMap();
-            std::cout << "Roads2DGenerator::randomInitPoints(), nSafeWhile = " << safeLoop.getLoopNumber() << std::endl;
-            exit(1);
+            m_sErrorMessage = "Roads2DGenerator::randomInitPoints(), nSafeWhile = " + std::to_string(safeLoop.getLoopNumber());
+            std::cerr << m_sErrorMessage << std::endl;
+            return false;
         }
     }
+    return true;
 }
 
 int Roads2DGenerator::moveDiagonalTails() {
@@ -584,18 +710,20 @@ int Roads2DGenerator::moveDiagonalTails() {
     return ret;
 }
 
-void Roads2DGenerator::moveDiagonalTailsLoop() {
+bool Roads2DGenerator::moveDiagonalTailsLoop() {
     int mdt = moveDiagonalTails();
-    Roads2DGeneratorSafeLoop safeLoop(1000);
+    Roads2DGeneratorSafeLoop safeLoop(m_config.getMaxAllowMoveDiagonalTailsTries());
     while (mdt > 0) {
         safeLoop.doIncrement();
         mdt = moveDiagonalTails();
         if (safeLoop.isOverMax()) {
             printMap();
-            std::cout << "Roads2DGenerator::moveDiagonalTailsLoop(), nSafeWhile = " << safeLoop.getLoopNumber() << std::endl;
-            exit(1);
+            m_sErrorMessage = "Roads2DGenerator::moveDiagonalTailsLoop(), nSafeWhile = " + std::to_string(safeLoop.getLoopNumber());
+            std::cerr << m_sErrorMessage << std::endl;
+            return false;
         }
     }
+    return true;
 }
 
 bool Roads2DGenerator::checkAndRandomMove(int x, int y) {
@@ -643,8 +771,6 @@ int Roads2DGenerator::getAroundCount(int x, int y) {
     }
     return ret;
 }
-
-
 
 std::vector<Roads2DGeneratorPoint> Roads2DGenerator::findSinglePoints() {
     std::vector<Roads2DGeneratorPoint> vSinglePoints;
@@ -777,17 +903,19 @@ int Roads2DGenerator::removeAllShortCicles() {
     return ret;
 }
 
-void Roads2DGenerator::removeAllShortCiclesLoop() {
-    Roads2DGeneratorSafeLoop safeLoop(1000);
+bool Roads2DGenerator::removeAllShortCiclesLoop() {
+    Roads2DGeneratorSafeLoop safeLoop(m_config.getMaxAllowRemoveAllShortCiclesLoopTries());
     while (removeAllShortCicles() > 0) {
         safeLoop.doIncrement();
         if (safeLoop.isOverMax()) {
             printMap();
-            std::cout << "Roads2DGenerator::removeAllShortCiclesLoop(), nSafeWhile = " << safeLoop.getLoopNumber() << std::endl;
-            exit(1);
+            m_sErrorMessage = "Roads2DGenerator::removeAllShortCiclesLoop(), nSafeWhile = " + std::to_string(safeLoop.getLoopNumber());
+            std::cerr << m_sErrorMessage << std::endl;
+            return false;
         }
         continue;
     }
+    return true;
 }
 
 bool Roads2DGenerator::isDeadlockPoint(int x, int y) {
@@ -903,28 +1031,32 @@ void Roads2DGenerator::removeDeadlocksLoop() {
     }
 }
 
-void Roads2DGenerator::connectUnunionRoads() {
+bool Roads2DGenerator::connectUnunionRoads() {
     std::vector<Roads2DGeneratorConnectedComponent> comps = findConnectedComponents();
-    Roads2DGeneratorSafeLoop safeLoop(100);
+    Roads2DGeneratorSafeLoop safeLoop(m_config.getMaxAllowConnectUnunionRoadsTries());
     while (comps.size() > 1) {
         Roads2DGeneratorPoint p0 = comps[0].getPoints()[m_random.getNextRandom() % comps[0].getPoints().size()];
         Roads2DGeneratorPoint p1 = comps[1].getPoints()[m_random.getNextRandom() % comps[1].getPoints().size()];
         connectPoints(p0, p1);
-        moveDiagonalTailsLoop();
+        if (!moveDiagonalTailsLoop()) {
+            return false;
+        }
         comps = findConnectedComponents();
 
         safeLoop.doIncrement();
         if (safeLoop.isOverMax()) {
             printMap();
-            std::cout << "Roads2DGenerator::connectUnunionRoads(), nSafeWhile = " << safeLoop.getLoopNumber() << std::endl;
-            exit(1);
+            m_sErrorMessage = "Roads2DGenerator::connectUnunionRoads(), nSafeWhile = " + std::to_string(safeLoop.getLoopNumber());
+            std::cerr << m_sErrorMessage << std::endl;
+            return false;
         }
     }
     // std::cout << "comps.size() = " << comps.size() << std::endl;
+    return true;
 }
 
 std::string Roads2DGenerator::getRoadPart(int x, int y) {
-    if (x < 0 || x >= m_nWidthPixels || y < 0 || y >= m_nHeightPixels) {
+    if (x < 0 || x >= m_config.getWidth() || y < 0 || y >= m_config.getHeight()) {
         return "error";
     }
     if (!m_vPixelMap[x][y]) {
@@ -975,8 +1107,8 @@ std::string Roads2DGenerator::getRoadPart(int x, int y) {
 std::vector<Roads2DGeneratorConnectedComponent> Roads2DGenerator::findConnectedComponents() {
     Roads2DGeneratorConnectedComponents components;
     int nPoints = 0;
-    for (int x = 0; x < m_nWidthPixels-1; x++) {
-        for (int y = 0; y < m_nHeightPixels-1; y++) {
+    for (int x = 0; x < m_config.getWidth() - 1; x++) {
+        for (int y = 0; y < m_config.getHeight() - 1; y++) {
             Roads2DGeneratorPoint p0(x,y);
             Roads2DGeneratorPoint p1(x+1,y);
             Roads2DGeneratorPoint p2(x,y+1);
