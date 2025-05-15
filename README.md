@@ -1,5 +1,7 @@
 # Roads2DGenerator
 
+Implemented simularity for c++, java.
+
 2D map of roads generation algorithm
 
 (collapse wave function???)
@@ -7,7 +9,6 @@
 Forked and improved from https://github.com/sea-kg/roadmapgen2d
 
 Example of generated structures (30x30 points):
-
 
 
 ![example1.png](https://github.com/sea-kg/Roads2DGenerator/blob/main/images/example1.png?raw=true)
