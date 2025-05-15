@@ -45,13 +45,13 @@ class Roads2DGeneratorSafeLoop {
 class Roads2DGeneratorPseudoRandom {
     public:
         Roads2DGeneratorPseudoRandom();
-        void setInitSeed(unsigned int nSeed);
-        unsigned int getNextRandom();
-        unsigned int getInitSeed();
-        unsigned int getSeed();
+        void setInitSeed(int nSeed);
+        int getNextRandom();
+        int getInitSeed();
+        int getSeed();
     private:
-        unsigned int m_nSeed;
-        unsigned int m_nInitSeed;
+        int m_nSeed;
+        int m_nInitSeed;
 };
 
 class Roads2DGeneratorPoint {
@@ -120,7 +120,7 @@ class Roads2DGeneratorConfig {
         bool isSetByUserMaxAllowInitPointsTries() const;
         int getMaxAllowInitPointsTries() const;
         Roads2DGeneratorConfig &setMaxAllowMoveDiagonalTailsTries(int val, bool bSetByUser = true);
-        bool isSetAsUserMaxAllowMoveDiagonalTailsTries() const;
+        bool isSetByUserMaxAllowMoveDiagonalTailsTries() const;
         int getMaxAllowMoveDiagonalTailsTries() const;
         Roads2DGeneratorConfig &setMaxAllowConnectUnunionRoadsTries(int val, bool bSetByUser = true);
         bool isSetByUserAllowConnectUnunionRoadsTries() const;

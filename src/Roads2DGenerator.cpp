@@ -58,21 +58,23 @@ Roads2DGeneratorPseudoRandom::Roads2DGeneratorPseudoRandom() {
     m_nSeed = 1;
 }
 
-void Roads2DGeneratorPseudoRandom::setInitSeed(unsigned int nSeed) {
+void Roads2DGeneratorPseudoRandom::setInitSeed(int nSeed) {
     m_nSeed = nSeed;
     m_nInitSeed = nSeed;
 }
 
-unsigned int Roads2DGeneratorPseudoRandom::getNextRandom() {
-    m_nSeed = std::sin(m_nSeed + 1) * float(m_nSeed + 1103515245) + 123;
+int Roads2DGeneratorPseudoRandom::getNextRandom() {
+    float num = m_nSeed + 1103515245;
+    m_nSeed = std::sin(m_nSeed + 1) * num + 123.0f;
+    m_nSeed = m_nSeed & 0x0FFFFFFF;
     return m_nSeed;
 }
 
-unsigned int Roads2DGeneratorPseudoRandom::getInitSeed() {
+int Roads2DGeneratorPseudoRandom::getInitSeed() {
     return m_nInitSeed;
 }
 
-unsigned int Roads2DGeneratorPseudoRandom::getSeed() {
+int Roads2DGeneratorPseudoRandom::getSeed() {
     return m_nSeed;
 }
 
@@ -314,7 +316,7 @@ float Roads2DGeneratorConfig::getDensity() const {
 }
 
 int Roads2DGeneratorConfig::getMaxInitPoints() const {
-    return m_nDensity * (m_nWidth * m_nHeight / 2);
+    return m_nDensity * (m_nWidth * m_nHeight);
 }
 
 Roads2DGeneratorConfig &Roads2DGeneratorConfig::setSeedInitRandom(int val) {
@@ -350,7 +352,7 @@ Roads2DGeneratorConfig &Roads2DGeneratorConfig::setMaxAllowMoveDiagonalTailsTrie
     return *this;
 }
 
-bool Roads2DGeneratorConfig::isSetAsUserMaxAllowMoveDiagonalTailsTries() const {
+bool Roads2DGeneratorConfig::isSetByUserMaxAllowMoveDiagonalTailsTries() const {
     return m_bSetByUserMaxAllowMoveDiagonalTailsTries;
 }
 
@@ -425,13 +427,13 @@ bool Roads2DGenerator::generate(const Roads2DGeneratorConfig &config) {
 
 bool Roads2DGenerator::generate() {
     // https://en.wikipedia.org/wiki/Wave_function_collapse
-
-    int nBaseCoefForSafeWhile = m_config.getWidth() * m_config.getHeight() * m_config.getDensity() * 2;
+    float num = m_config.getWidth() * m_config.getHeight();
+    int nBaseCoefForSafeWhile = num * m_config.getDensity() * 2.0f;
     if (!m_config.isSetByUserMaxAllowInitPointsTries()) {
         m_config.setMaxAllowInitPointsTries(nBaseCoefForSafeWhile, false);
     }
 
-    if (!m_config.isSetByUserMaxAllowInitPointsTries()) {
+    if (!m_config.isSetByUserMaxAllowMoveDiagonalTailsTries()) {
         m_config.setMaxAllowMoveDiagonalTailsTries(nBaseCoefForSafeWhile / 10, false);
     }
 
@@ -461,7 +463,6 @@ bool Roads2DGenerator::generate() {
     if (!moveDiagonalTailsLoop()) {
         return false;
     }
-    // printMap();
 
     bool bAgain = true;
     // TODO safecicle
@@ -494,13 +495,14 @@ bool Roads2DGenerator::generate() {
         return false;
     }
 
-    // printMap();
-
     tryConnectDeadlocksLoop();
     // commented: moveDiagonalTailsLoop()
 
-    removeAllShortCiclesLoop();
+    if (!removeAllShortCiclesLoop()) {
+        return false;
+    }
     removeRames();
+
     if (!moveDiagonalTailsLoop()) {
         return false;
     }

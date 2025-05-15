@@ -7,10 +7,10 @@ int main() {
     Roads2DGeneratorPseudoRandom rand;
     rand.setInitSeed(1686154273);
     std::vector<int> vRandomNumbers;
-    vRandomNumbers.push_back(-395255789);
-    vRandomNumbers.push_back(517969440);
-    vRandomNumbers.push_back(-905537371);
-    vRandomNumbers.push_back(-16776518);
+    vRandomNumbers.push_back(213279087);
+    vRandomNumbers.push_back(55101825);
+    vRandomNumbers.push_back(132540442);
+    vRandomNumbers.push_back(17647650);
     for (int i = 0; i < vRandomNumbers.size(); i++) {
         int nRand = rand.getNextRandom();
         if (vRandomNumbers[i] != nRand) {

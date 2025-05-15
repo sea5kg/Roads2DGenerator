@@ -18,13 +18,13 @@ int main(int argc, char *argv[])
     road2gen.getConfig()
         .setWidth(50)
         .setHeight(25)
-        .setDensity(0.9)
+        .setDensity(0.7)
     ;
 
     // You can use the following parameter (nSeedRandom) to reproduce the results.
     // If the parameters are the same, then the result will be the same on any machine.
-    road2gen.getConfig().setSeedInitRandom(std::time(0));
-    // road2gen.getConfig().setSeedInitRandom(1686154273);
+    // road2gen.getConfig().setSeedInitRandom(std::time(0));
+    road2gen.getConfig().setSeedInitRandom(1686154273);
 
     // You can exclude some area
     road2gen.getConfig().setPresetExcludes(12, 10, 18, 15);
