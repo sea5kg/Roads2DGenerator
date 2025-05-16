@@ -1,13 +1,488 @@
+/*
+MIT License
+
+Copyright (c) 2021-2025 Evgenii Sopov (mrseakg@gmail.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+// original source-code: https://github.com/sea5kg/Roads2DGenerator
+
 package src;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.io.FileWriter;
 import java.io.IOException;
 
 public class Roads2DGenerator {
+
+    // Roads2DGeneratorSafeLoop
+    public class Roads2DGeneratorSafeLoop {
+        private int m_nMaxLoop;
+        private int m_nCurrentLoop;
+
+        public Roads2DGeneratorSafeLoop(int nMaxLoop) {
+            this.m_nMaxLoop = nMaxLoop;
+            this.m_nCurrentLoop = 0;
+        }
+
+        public void doIncrement() {
+            m_nCurrentLoop++;
+        }
+
+        public boolean isOverMax() {
+            return m_nCurrentLoop >= m_nMaxLoop;
+        }
+
+        public int getLoopNumber() {
+            return m_nCurrentLoop;
+        }
+    }
+
+    // Roads2DGeneratorPseudoRandom
+    public class Roads2DGeneratorPseudoRandom {
+        private int m_nSeed;
+        private int m_nInitSeed;
+
+        public Roads2DGeneratorPseudoRandom() {
+            m_nSeed = 0;
+            m_nInitSeed = 0;
+        }
+
+        public void setInitSeed(int nSeed) {
+            this.m_nInitSeed = nSeed;
+            this.m_nSeed = nSeed;
+        }
+
+        public int getNextRandom() {
+            // m_nSeed = std::sin(m_nSeed + 1) * float(m_nSeed + 1103515245) + 123;
+            float num = m_nSeed + 1103515245;
+            m_nSeed = (int)((Math.sin(m_nSeed + 1) * num + 123.0f));
+            m_nSeed = m_nSeed & 0x0FFFFFFF;
+            return m_nSeed;
+            // return m_nSeed;
+        }
+
+        public int getInitSeed() {
+            return m_nInitSeed;
+        }
+
+        public int getSeed() {
+            return m_nSeed;
+        }
+    }
+
+    // Roads2DGeneratorPoint
+    public class Roads2DGeneratorPoint {
+        private int m_nX;
+        private int m_nY;
+
+        public Roads2DGeneratorPoint() {
+            this.m_nX = 0;
+            this.m_nY = 0;
+        }
+
+        public Roads2DGeneratorPoint(int x, int y) {
+            this.m_nX = x;
+            this.m_nY = y;
+        }
+
+        public int getX() {
+            return m_nX;
+        }
+
+        public int getY() {
+            return m_nY;
+        }
+
+        @Override
+        public String toString() {
+            return "Point[" + m_nX + ", " + m_nY + "]";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Roads2DGeneratorPoint that = (Roads2DGeneratorPoint) o;
+            return m_nX == that.m_nX && m_nY == that.m_nY;
+        }
+
+        @Override
+        public int hashCode() {
+            return 100000 * m_nX + m_nY;
+        }
+
+    }
+
+    // Roads2DGeneratorGraph
+    public class Roads2DGeneratorGraph {
+        private final List<Roads2DGeneratorPoint> m_vPoints;
+        private final List<Roads2DGeneratorPair<Integer, Integer>> m_vConnections;
+
+        public Roads2DGeneratorGraph() {
+            this.m_vPoints = new ArrayList<>();
+            this.m_vConnections = new ArrayList<>();
+        }
+
+        public int findOrAddPointGetIndex(Roads2DGeneratorPoint point) {
+            for (int i = 0; i < m_vPoints.size(); i++) {
+                if (m_vPoints.get(i).equals(point)) {
+                    return i;
+                }
+            }
+            m_vPoints.add(point);
+            return m_vPoints.size() - 1;
+        }
+
+        public void addConnection(Integer index1, Integer index2) {
+            Integer _min = Math.min(index1, index2);
+            Integer _max = Math.max(index1, index2);
+            for (Roads2DGeneratorPair connection : m_vConnections) {
+                if (connection.first == _min && connection.second == _max) {
+                    return;
+                }
+            }
+            m_vConnections.add(new Roads2DGeneratorPair<>(_min, _max));
+        }
+
+        public List<Roads2DGeneratorPoint> getPoints() {
+            return new ArrayList<>(m_vPoints); // return copy
+        }
+
+        public List<Roads2DGeneratorPair> getConnections() {
+            return new ArrayList<>(m_vConnections); // return copy
+        }
+    }
+
+    // Roads2DGeneratorConnectedComponent
+    public class Roads2DGeneratorConnectedComponent {
+        private final List<Roads2DGeneratorPoint> m_vPoints;
+
+        public Roads2DGeneratorConnectedComponent() {
+            this.m_vPoints = new ArrayList<>();
+        }
+
+        public boolean hasPoint(Roads2DGeneratorPoint point) {
+            return m_vPoints.contains(point);
+        }
+
+        public void addPoint(Roads2DGeneratorPoint point) {
+            if (!hasPoint(point)) {
+                m_vPoints.add(point);
+            }
+        }
+
+        public List<Roads2DGeneratorPoint> getPoints() {
+            return new ArrayList<>(m_vPoints); // copy
+        }
+
+        public boolean hasIntersection(Roads2DGeneratorConnectedComponent component) {
+            for (Roads2DGeneratorPoint point : m_vPoints) {
+                if (component.hasPoint(point)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void merge(Roads2DGeneratorConnectedComponent component) {
+            for (Roads2DGeneratorPoint point : component.getPoints()) {
+                this.addPoint(point);
+            }
+        }
+    }
+
+    // Roads2DGeneratorConnectedComponents
+    public class Roads2DGeneratorConnectedComponents {
+        private List<Roads2DGeneratorConnectedComponent> m_vComponents;
+
+        public Roads2DGeneratorConnectedComponents() {
+            this.m_vComponents = new ArrayList<>();
+        }
+
+        public void addConnectedPoints(Roads2DGeneratorPoint p1, Roads2DGeneratorPoint p2) {
+            boolean bAdded = false;
+
+            for (Roads2DGeneratorConnectedComponent component : m_vComponents) {
+                if (component.hasPoint(p1)) {
+                    component.addPoint(p2);
+                    bAdded = true;
+                }
+                if (component.hasPoint(p2)) {
+                    component.addPoint(p1);
+                    bAdded = true;
+                }
+            }
+            if (!bAdded) {
+                Roads2DGeneratorConnectedComponent newComponent = new Roads2DGeneratorConnectedComponent();
+                newComponent.addPoint(p1);
+                newComponent.addPoint(p2);
+                m_vComponents.add(newComponent);
+            }
+            mergeComponents();
+        }
+
+        public List<Roads2DGeneratorConnectedComponent> getComponents() {
+            return new ArrayList<>(m_vComponents);
+        }
+
+        private void mergeComponents() {
+            List<Roads2DGeneratorConnectedComponent> mergedComponents = new ArrayList<>(this.m_vComponents);
+            boolean bMerged = true;
+
+            while (bMerged) {
+                bMerged = false;
+                for (int i = mergedComponents.size() - 1; i >= 1; i--) {
+                    for (int t = i - 1; t >= 0; t--) {
+                        if (mergedComponents.get(i).hasIntersection(mergedComponents.get(t))) {
+                            mergedComponents.get(i).merge(mergedComponents.get(t));
+                            mergedComponents.remove(t);
+                            bMerged = true;
+                            break;
+                        }
+                    }
+                    if (bMerged) {
+                        break;
+                    }
+                }
+            }
+            this.m_vComponents = new ArrayList<>(mergedComponents);
+        }
+    }
+
+    // Roads2DGeneratorPair - simular for std::pair
+    public class Roads2DGeneratorPair<A, B> {
+        public final A first;
+        public final B second;
+
+        public Roads2DGeneratorPair(A first, B second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Roads2DGeneratorPair)) return false;
+            Roads2DGeneratorPair<?, ?> pair = (Roads2DGeneratorPair<?, ?>) o;
+            return first.equals(pair.first) && second.equals(pair.second);
+        }
+
+        @Override
+        public int hashCode() {
+            return 100000 * (int)first + (int)second;
+        }
+    }
+
+    // Roads2DGeneratorConfig
+    public class Roads2DGeneratorConfig {
+        private int m_nWidth;
+        private int m_nHeight;
+        private float m_nDensity;
+        private int m_nSeedInitRandom;
+        private int m_nMaxAllowInitPointsTries;
+        private boolean m_bSetByUserMaxAllowInitPointsTries;
+        private int m_nMaxAllowMoveDiagonalTailsTries;
+        private boolean m_bSetByUserMaxAllowMoveDiagonalTailsTries;
+        private int m_nMaxAllowConnectUnunionRoadsTries;
+        private boolean m_bSetByUserMaxAllowConnectUnunionRoadsTries;
+        private int m_nMaxAllowRemoveAllShortCiclesLoopTries;
+        private boolean m_bSetByUserMaxAllowRemoveAllShortCiclesLoopTries;
+        private final Map<Roads2DGeneratorPair<Integer, Integer>, Boolean> m_presets = new HashMap<>();
+
+
+        public Roads2DGeneratorConfig() {
+            resetConfig();
+        }
+
+        public Roads2DGeneratorConfig resetConfig() {
+            m_nWidth = 0;
+            m_nHeight = 0;
+            m_nDensity = 0.0f;
+            m_nSeedInitRandom = 0;
+            m_nMaxAllowInitPointsTries = 0;
+            m_bSetByUserMaxAllowInitPointsTries = false;
+            m_nMaxAllowMoveDiagonalTailsTries = 0;
+            m_bSetByUserMaxAllowMoveDiagonalTailsTries = false;
+            m_nMaxAllowConnectUnunionRoadsTries = 0;
+            m_bSetByUserMaxAllowConnectUnunionRoadsTries = false;
+            m_nMaxAllowRemoveAllShortCiclesLoopTries = 0;
+            m_bSetByUserMaxAllowRemoveAllShortCiclesLoopTries = false;
+            m_presets.clear();
+            return this;
+        }
+
+        // Width methods
+        public Roads2DGeneratorConfig setWidth(int val) {
+            this.m_nWidth = val;
+            return this;
+        }
+
+        public int getWidth() {
+            return m_nWidth;
+        }
+
+        // Height methods
+        public Roads2DGeneratorConfig setHeight(int val) {
+            this.m_nHeight = val;
+            return this;
+        }
+
+        public int getHeight() {
+            return m_nHeight;
+        }
+
+        public Roads2DGeneratorConfig setDensity(float nDensity) {
+            // Apply the same validation as in C++ version
+            if (nDensity > 1.0f) {
+                nDensity = 1.0f;
+            }
+            if (nDensity < 0.0f) {
+                nDensity = 0.0f;
+            }
+            this.m_nDensity = nDensity;
+            return this;
+        }
+
+        public float getDensity() {
+            return m_nDensity;
+        }
+
+        public int getMaxInitPoints() {
+            float num = m_nWidth * m_nHeight;
+            return (int) (num * m_nDensity);
+        }
+
+        public Roads2DGeneratorConfig setSeedInitRandom(int val) {
+            this.m_nSeedInitRandom = val;
+            return this;
+        }
+
+        public int getSeedInitRandom() {
+            return m_nSeedInitRandom;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowInitPointsTries(int val, boolean bSetByUser) {
+            this.m_nMaxAllowInitPointsTries = val;
+            if (bSetByUser) {
+                this.m_bSetByUserMaxAllowInitPointsTries = bSetByUser;
+            }
+            return this;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowInitPointsTries(int val) {
+            setMaxAllowInitPointsTries(val, true);
+            return this;
+        }
+
+        public boolean isSetByUserMaxAllowInitPointsTries() {
+            return m_bSetByUserMaxAllowInitPointsTries;
+        }
+
+        public int getMaxAllowInitPointsTries() {
+            return m_nMaxAllowInitPointsTries;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowMoveDiagonalTailsTries(int val, boolean bSetByUser) {
+            this.m_nMaxAllowMoveDiagonalTailsTries = val;
+            if (bSetByUser) {
+                this.m_bSetByUserMaxAllowMoveDiagonalTailsTries = bSetByUser;
+            }
+            return this;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowMoveDiagonalTailsTries(int val) {
+            setMaxAllowMoveDiagonalTailsTries(val, true);
+            return this;
+        }
+
+        public boolean isSetByUserMaxAllowMoveDiagonalTailsTries() {
+            return m_bSetByUserMaxAllowMoveDiagonalTailsTries;
+        }
+
+        public int getMaxAllowMoveDiagonalTailsTries() {
+            return m_nMaxAllowMoveDiagonalTailsTries;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowConnectUnunionRoadsTries(int val, boolean bSetByUser) {
+            this.m_nMaxAllowConnectUnunionRoadsTries = val;
+            if (bSetByUser) {
+                this.m_bSetByUserMaxAllowConnectUnunionRoadsTries = bSetByUser;
+            }
+            return this;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowConnectUnunionRoadsTries(int val) {
+            setMaxAllowConnectUnunionRoadsTries(val, true);
+            return this;
+        }
+
+        public boolean isSetByUserAllowConnectUnunionRoadsTries() {
+            return m_bSetByUserMaxAllowConnectUnunionRoadsTries;
+        }
+
+        public int getMaxAllowConnectUnunionRoadsTries() {
+            return m_nMaxAllowConnectUnunionRoadsTries;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowRemoveAllShortCiclesLoopTries(int val, boolean bSetByUser) {
+            this.m_nMaxAllowRemoveAllShortCiclesLoopTries = val;
+            if (bSetByUser) {
+                this.m_bSetByUserMaxAllowRemoveAllShortCiclesLoopTries = bSetByUser;
+            }
+            return this;
+        }
+
+        public Roads2DGeneratorConfig setMaxAllowRemoveAllShortCiclesLoopTries(int val) {
+            setMaxAllowRemoveAllShortCiclesLoopTries(val, true);
+            return this;
+        }
+
+        public boolean isSetAsUserMaxAllowRemoveAllShortCiclesLoopTries() {
+            return m_bSetByUserMaxAllowRemoveAllShortCiclesLoopTries;
+        }
+
+        public int getMaxAllowRemoveAllShortCiclesLoopTries() {
+            return m_nMaxAllowRemoveAllShortCiclesLoopTries;
+        }
+
+        public Roads2DGeneratorConfig setPresetExcludes(int x_start, int y_start, int x_end, int y_end) {
+            for (int x = x_start; x <= x_end; x++) {
+                for (int y = y_start; y <= y_end; y++) {
+                    m_presets.put(new Roads2DGeneratorPair<>(x, y), false);
+                }
+            }
+            return this;
+        }
+
+        public Map<Roads2DGeneratorPair<Integer, Integer>, Boolean> getPresets() {
+            return new HashMap<>(m_presets);
+        }
+    }
+
+
+    // Roads2DGenerator
     private List<List<Boolean>> m_vPixelMap;
     private Roads2DGeneratorPseudoRandom m_random;
     private Roads2DGeneratorConfig m_config;
