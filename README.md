@@ -6,15 +6,15 @@ Implemented simularity for c++, java.
 
 (collapse wave function???)
 
-Forked and improved from https://github.com/sea-kg/roadmapgen2d
+Forked and improved from https://github.com/sea5kg/roadmapgen2d
 
 Example of generated structures (30x30 points):
 
 
-![example1.png](https://github.com/sea-kg/Roads2DGenerator/blob/main/images/example1.png?raw=true)
-![example2.png](https://github.com/sea-kg/Roads2DGenerator/blob/main/images/example2.png?raw=true)
-![example3.png](https://github.com/sea-kg/Roads2DGenerator/blob/main/images/example3.png?raw=true)
-![example4.png](https://github.com/sea-kg/Roads2DGenerator/blob/main/images/example4.png?raw=true)
+![example1.png](https://github.com/sea5kg/Roads2DGenerator/blob/main/images/example1.png?raw=true)
+![example2.png](https://github.com/sea5kg/Roads2DGenerator/blob/main/images/example2.png?raw=true)
+![example3.png](https://github.com/sea5kg/Roads2DGenerator/blob/main/images/example3.png?raw=true)
+![example4.png](https://github.com/sea5kg/Roads2DGenerator/blob/main/images/example4.png?raw=true)
 
 
 ## Usage

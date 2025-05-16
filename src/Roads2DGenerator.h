@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021-2023 Evgenii Sopov (mrseakg@gmail.com)
+Copyright (c) 2021-2025 Evgenii Sopov (mrseakg@gmail.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// original source-code: https://github.com/sea-kg/Roads2DGenerator
+// original source-code: https://github.com/sea5kg/Roads2DGenerator
 
 #ifndef __ROADS_2D_GENERATOR_H__
 #define __ROADS_2D_GENERATOR_H__
